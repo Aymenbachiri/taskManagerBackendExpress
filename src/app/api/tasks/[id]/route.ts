@@ -38,10 +38,11 @@ import { NextResponse } from "next/server";
  *       200:
  *         description: Task updated successfully.
  */
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+
+type Params = Promise<{ id: string }>;
+
+export async function PUT(req: Request, { params }: { params: Params }) {
+  const { id } = await params;
   const body = await req.json();
   const parseResult = updateTaskSchema.safeParse(body);
 
@@ -55,7 +56,7 @@ export async function PUT(
   const { error } = await supabase
     .from("tasks")
     .update(parseResult.data)
-    .eq("id", params.id);
+    .eq("id", id);
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -81,13 +82,11 @@ export async function PUT(
  *       200:
  *         description: Task deleted successfully.
  */
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  const { error } = await supabase.from("tasks").delete().eq("id", params.id);
+export async function DELETE(req: Request, { params }: { params: Params }) {
+  const { id } = await params;
+  const { error } = await supabase.from("tasks").delete().eq("id", id);
 
   if (error) return NextResponse.json({ error }, { status: 500 });
 
-  return NextResponse.json(`Task ${params.id} deleted successfully`);
+  return NextResponse.json(`Task ${id} deleted successfully`);
 }
